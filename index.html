@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JavaScript</title>
+  <style>
+    *{ padding:0; margin: 0; }
+    body {background: #333; color: white;line-height: 24px;font-size: 13px;}
+    #inner {padding: 20px;}
+  </style>
+</head>
+<body>
+  <div id="inner"></div>
+<script>
+var log = `
+function deepClone(initalObj, finalObj) {    
+  var obj = finalObj || {};    
+  for (var i in initalObj) {        
+    var prop = initalObj[i];        // 避免相互引用对象导致死循环，如initalObj.a = initalObj的情况
+    if(prop === obj) {            
+      continue;
+    }        
+    if (typeof prop === 'object') {
+      obj[i] = (prop.constructor === Array) ? [] : Object.create(prop);
+    } else {
+      obj[i] = prop;
+    }
+  }    
+  return obj;
+}
+var str = {};
+var obj = { a: {a: "hello", b: 21} };
+deepClone(obj, str);
+obj.a = {m:1,n:{a:1,b:2}}
+console.log(obj); // {m:1,n:{a:1,b:2}}
+console.log(str); // { a: {a: "hello", b: 21} }
+`;
+html(log);
+
+function html(log) {
+  document.getElementById('inner').innerText = log;
+}
+// Object.assign()拷贝的只是属性值，假如源对象的属性值是一个指向对象的引用，它也只拷贝那个引用值。所以Object.assign()只能用于浅拷贝或是合并对象。这是Object.assign()值得注意的地方。
+// 指向了同一块内存，所以修改其中任意的值，另一个值都会随之变化，这就是浅拷贝
+// 深度拷贝- lodash
+var _ = require('lodash');
+var obj1 = {
+    a: 1,
+    b: { f: { g: 1 } },
+    c: [1, 2, 3]
+};
+var obj2 = _.cloneDeep(obj1);
+console.log(obj1.b.f === obj2.b.f); // false
+
+// 浅拷贝就想是您和您的影子之间的关系 : 你挂了, 你的影子也跟着挂了
+// 深拷贝就像是您的克隆人, 你挂啦, 可你的克隆人还活着
+
+// 深度拷贝-jQuery.extend({})
+// jQuery.extend( [deep ], target, object1 [, objectN ] )，其中deep为Boolean类型，如果是true，则进行深拷贝。
+// var $ = require('jquery');
+// var obj1 = {
+//     a: 1,
+//     b: { f: { g: 1 } },
+//     c: [1, 2, 3]
+// };
+// var obj2 = $.extend(true, {}, obj1);
+// console.log(obj1.b.f === obj2.b.f); // false
+
+// 深度拷贝-Object.create()
+// function deepClone(initalObj, finalObj) {    
+//   var obj = finalObj || {};    
+//   for (var i in initalObj) {        
+//     var prop = initalObj[i];        // 避免相互引用对象导致死循环，如initalObj.a = initalObj的情况
+//     if(prop === obj) {            
+//       continue;
+//     }        
+//     if (typeof prop === 'object') {
+//       obj[i] = (prop.constructor === Array) ? [] : Object.create(prop);
+//       console.log('Object.create(prop):', Object.create(prop));
+//       // Object.create()方法创建一个新对象，使用现有的对象来提供新创建的对象的__proto__
+//     } else {
+//       obj[i] = prop;
+//     }
+//   }    
+//   return obj;
+// }
+// var str = {};
+// var obj = { a: {a: "hello", b: 21} };
+// deepClone(obj, str);
+// console.log(obj); // { a: {a: "hello", b: 21} }
+// console.log(str.a.a); // hello
+
+//深度拷贝-递归拷贝
+// function deepClone(initalObj, finalObj) {    
+//   var obj = finalObj || {};
+//   for (var i in initalObj) {
+//     var prop = initalObj[i]; // 避免相互引用对象导致死循环，如initalObj.a = initalObj的情况
+//     if(prop === obj) {
+//       continue;
+//     }
+//     if (typeof prop === 'object') {
+//       obj[i] = (prop.constructor === Array) ? [] : {};
+//       arguments.callee(prop, obj[i]); // 递归
+//     } else {
+//       obj[i] = prop;
+//     }
+//   }    
+//   return obj;
+// }
+// var str = {};
+// var obj = { a: {a: "hello", b: 21} };
+// deepClone(obj, str);
+// obj.a = {m:1,n:{a:1,b:2}}
+// console.log(obj); // {m:1,n:{a:1,b:2}}
+// console.log(str); // { a: {a: "hello", b: 21} }
+
+// 深度拷贝二：
+// var cloneObj = function (obj) {
+//   var str, newObj = obj.constructor === Array ? [] : {};
+//   if (typeof obj !== 'object') return ;
+//   if (window.JSON) {
+//     str = JSON.stringify(obj); // 序列化对象
+//     newObj = JSON.parse(str); // 还原成新对象
+//   } else {
+//     for (var i in obj) {
+//       newObj[i] = typeof obj[i] === 'object'?cloneObj(obj[i]):obj[i];
+//     }
+//   }
+//   return newObj;
+// };
+
+// 深度拷贝二：
+// JSON.parse()和JSON.stringify()能正确处理的对象只有Number、String、Array等能够被json表示的数据结构，因此函数这种不能被json表示的类型将不能被正确处理。
+// var obj1 = { body: { a: 10 } };
+// var obj2 = JSON.parse(JSON.stringify(obj1));
+// obj2.body.a = 20;
+// console.log(obj1); // { body: { a: 10 } };
+// console.log(obj2); // { body: { a: 20 } };
+// console.log(obj1 === obj2); // false
+// console.log(obj1.body === obj2.body); // false
+
+// 深度拷贝一：
+// var m = { a: 10, b: 20 }
+// var n = {a:m.a,b:m.b};
+// n.a = 15;
+// console.log(m); // {a: 10, b: 20}
+// console.log(n); // {a: 15, b: 20}
+
+// 深度拷贝：
+// var obj1 = { a: 10, b: 20, c: 30 };
+// var obj2 = Object.assign({}, obj1);
+// obj2.b = 100;
+// console.log(obj1); // {a: 10, b: 20, c: 30}
+// console.log(obj2); // {a: 10, b: 100, c: 30}
+
+// 浅拷贝：
+// var obj = { a: {a: "hello", b: 21} };
+// var initalObj = Object.assign({}, obj);
+// initalObj.a.a = "changed";
+// console.log(obj.a.a); // changed
+
+// 封装浅拷贝方法 
+// function simpleClone(initalObj) {    
+//   var obj = {};    
+//   for ( var i in initalObj) {
+//     obj[i] = initalObj[i];
+//   }    
+//   return obj;
+// }
+
+// 浅拷贝：
+// var obj = {
+//   a: "hello",
+//   b:{
+//     a: "world",
+//     b: 21
+//   },
+//   c:["Bob", "Tom", "Jenny"],
+//   d:function() {
+//     alert("hello world");
+//   }
+// }
+// var cloneObj = simpleClone(obj); 
+// console.log(cloneObj.b); 
+// console.log(cloneObj.c);
+// console.log(cloneObj.d);
+// cloneObj.b.a = "changed";
+// cloneObj.c = [1, 2, 3];
+// cloneObj.d = function() { alert("changed"); };
+// console.log(obj.b);
+// console.log(obj.c);
+// console.log(obj.d);
+
+// 面试题：
+// var a = 0.1, b = 0.2;
+// console.log(consoleFn());
+// console.log(c)
+// console.log(d)
+// function consoleFn(){
+//   c = a+b;
+//   console.log(+'0.1' == a);
+//   console.log(c === 0.3);
+// }
+
+// 面试题：
+// var data = [];
+// for (var i = 0; i < 3; i++) {
+//   data[i] = setTimeout(function () {
+//     console.log(i);
+//   }, 500)
+// }
+// data[0]();
+// data[1]();
+// data[2]();
+
+// 面试题：
+// var a = setTimeout(function(){
+//   console.log('a')
+// }, 500)
+// console.log(a);
+
+// var b = setTimeout(function(){
+//   console.log('b')
+// }, 500)
+// console.log(b);
+
+// var m = { a: 10, b: 20 };
+// var n = { a: m.a, b: m.b };
+// n.a = 13;
+// console.log(m.a); // 10
+
+// var m = { a: 10, b: 20 };
+// var n = m;
+// n.a = 13;
+// console.log(m.a); // 13
+
+// var target = {a: 1, b: 1};
+// var copy1 = {a: 2, b: 2, c: {ca: 21, cb: 22, cc: 23}};
+// var copy2 = {c: {ca: 31, cb: 32, cd: 34}};
+// var result = Object.assign(target, copy1, copy2);
+// console.log(target);
+// console.log(target === result);
+
+// var arr = [1,2,3,4,5];
+// var size = 2;
+// function chunk(arr, size) {
+//   let result = [];
+//   for (var i = 0; i < arr.length; i=i+size) {
+//     console.log(i, i+size);
+//     result.push(arr.slice(i, i+size));
+//   }
+//   return result;
+// }
+
+// console.log(chunk(arr, size)); // [[1,2],[3,4]]
+
+// var arr = ['name', 'age', 'job', 'address']
+// var detail = {
+//   name: 'Tammy',
+//   age: '18',
+//   job: 'Web Designer',
+//   address: 'BeiJing'
+// }
+// var flag = arr.every(currentValue => {
+//   return detail[currentValue]
+// })
+// console.log(flag);
+// const person = {
+//   firstName: 'Jack',
+//   lastName: 'Hosik'
+// }
+// const handler = function (target, prop) {
+//   return prop in target? target[prop]:'Do not exist'
+// }
+
+// const proxy = new Proxy(person, handler)
+// console.log(proxy)
+// console.log(proxy.firstName)
+// console.log(proxy.lastName)
+// console.log(proxy.middleName)
+</script>
+</body>
+</html>
